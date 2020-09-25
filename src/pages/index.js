@@ -1,24 +1,11 @@
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useMemo   } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
 import { Canvas, extend, useThree, useRender } from "react-three-fiber"
 import { useSpring, a } from "react-spring/three"
-
 import "./style.css"
 
 extend({ OrbitControls })
-
-const SpaceShip = () => {
-  const [model, setModel] = useState()
-
-  useEffect(() => {
-    new GLTFLoader().load("/scene.gltf", setModel)
-  })
-
-  return model ? <primitive object={model.scene} /> : null
-}
-
 const Controls = () => {
   const orbitRef = useRef()
   const { camera, gl } = useThree()
@@ -29,7 +16,7 @@ const Controls = () => {
 
   return (
     <orbitControls
-      autoRotate
+      // autoRotate
       maxPolarAngle={Math.PI / 3}
       minPolarAngle={Math.PI / 3}
       args={[camera, gl.domElement]}
@@ -37,43 +24,90 @@ const Controls = () => {
     />
   )
 }
-
-const Plane = () => (
-  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
-    <planeBufferGeometry attach="geometry" args={[100, 100]} />
-    <meshPhysicalMaterial attach="material" color="white" />
-  </mesh>
-)
+ 
 
 const Box = () => {
   const [hovered, setHovered] = useState(false)
   const [active, setActive] = useState(false)
+
   const props = useSpring({
-    scale: active ? [1.5, 1.5, 1.5] : [1, 1, 1],
-    color: hovered ? "hotpink" : "gray",
+    scale: active ? [.3, .3, 1.2] : [.3, .3, .1] ,
+    color: hovered ? "hotpink" : "grey",
   })
+
+ 
+ 
+ function Extrusion({ start = [0,0], paths, ...props }) {
+ 
+
+
+  var heartShape = new THREE.Shape();
+  var x = 0, y = 0;
+heartShape.moveTo( x + 5, y + 5 );
+heartShape.bezierCurveTo( x + 5, y + 5, x + 4, y, x, y );
+heartShape.bezierCurveTo( x - 6, y, x - 6, y + 7,x - 6, y + 7 );
+heartShape.bezierCurveTo( x - 6, y + 11, x - 3, y + 15.4, x + 5, y + 19 );
+heartShape.bezierCurveTo( x + 12, y + 15.4, x + 16, y + 11, x + 16, y + 7 );
+heartShape.bezierCurveTo( x + 16, y + 7, x + 16, y, x + 10, y );
+heartShape.bezierCurveTo( x + 7, y, x + 5, y + 5, x + 5, y + 5 );
+
+ 
+  var shape = new THREE.Shape();
+  shape.moveTo( 0,0 );
+  shape.lineTo( 0, 2 );
+  shape.lineTo( 2, 2 );
+  shape.lineTo( 2, 0 );
+  shape.lineTo( 0, 0 );
+
+  var extrudeSettings = {
+    steps:  1,
+    depth: 3,
+    bevelEnabled: true,
+    bevelThickness: 1,
+    bevelSize: 0,
+    bevelOffset: 1,
+    bevelSegments: 4,
+
+ 
+  };
+  
 
   return (
     <a.mesh
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-      onClick={() => setActive(!active)}
-      scale={props.scale}
-      castShadow
-    >
-      <boxBufferGeometry attach="geometry" args={[1, 1, 1]} />
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+          onClick={() => setActive(!active)}
+          scale={props.scale} 
+          castShadow
+     >
+      <extrudeGeometry attach="geometry" args={[heartShape, extrudeSettings]} />
       <a.meshPhysicalMaterial attach="material" color={props.color} />
-    </a.mesh>
+    </a.mesh> 
+  )
+}
+
+
+ 
+
+  return (
+
+    <>
+      <Extrusion
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        onClick={() => setActive(!active)}
+        scale={props.scale} 
+        color={props.color} 
+        castShadow
+        />
+    </>
+
   )
 }
 
 export default () => {
-  const isBrowser = typeof window !== "undefined"
 
   return (
-    <>
-      <h1>Hello everyone!</h1>
-      {isBrowser && (
         <Canvas
           camera={{ position: [0, 0, 5] }}
           onCreated={({ gl }) => {
@@ -85,11 +119,8 @@ export default () => {
           <spotLight position={[15, 20, 5]} penumbra={1} castShadow />
           <fog attach="fog" args={["black", 10, 25]} />
           <Controls />
-          {/* <Box /> */}
-          {/* <Plane /> */}
-          <SpaceShip />
+          <Box />
+ 
         </Canvas>
-      )}
-    </>
   )
 }
